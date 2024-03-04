@@ -25,7 +25,7 @@ def start_driver(path):
 def delete_cache(driver):
     driver.delete_all_cookies()
 
-def open_page(driver,username,password,date_from,date_to):
+def open_page(driver,username,password,date_from,date_to,path):
     try:
         driver.get("https://solucionesreclamos.com/siac_desborde/app/vista/login_lh/index_sc.php")
         time.sleep(2)
@@ -99,7 +99,7 @@ def export(driver,date_from,date_to,path):
         driver.quit()
 
 def order_columns(path):
-    file_paths=glob.glob(path+"\*csv")
+    file_paths=glob.glob(path+"\*.csv")
     list_columns = ["CALC_SISTEMA", "FLAG_RECLAMO_PRINCIPAL", "NUMERO_RECLAMO", "CASO_NUMERO",
                       "CALC_FECHA_RECLAMO", "CALC_FECHA_HORA_RECLAMO", "MONTO_RECLAMADO_CARGO",
                       "MONTO_RECLAMADO", "MOTIVO1", "MOTIVO3", "MEDIO_UTILIZADO_INFO",
@@ -125,7 +125,7 @@ def execute_script(path,username,password,date_from,date_to):
     driver=start_driver(path)
     if driver:
         delete_cache(driver)
-        open_page(driver,username,password,date_from,date_to)
+        open_page(driver,username,password,date_from,date_to,path)
 
 if __name__ == '__main__':
     path_to_download_reports = r"C:\Users\Luis Alva\Desktop\reportes"
