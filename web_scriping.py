@@ -1,4 +1,5 @@
 import time
+import os
 import pandas as pd
 import glob
 from selenium import webdriver
@@ -25,7 +26,7 @@ def start_driver(path):
 def delete_cache(driver):
     driver.delete_all_cookies()
 
-def open_page(driver, username, password, date_from, date_to, path):
+def open_page(driver, username, password, date_from, date_to,path):
     try:
         driver.get("https://solucionesreclamos.com/siac_desborde/app/vista/login_lh/index_sc.php")
         time.sleep(2)
@@ -37,6 +38,9 @@ def open_page(driver, username, password, date_from, date_to, path):
         input_username.send_keys(username)
         
         input_password.click()
+        driver.execute_script(f"arguments[0].value = '{password}';", input_password)
+
+        '''
         numpad = WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.ID,"numpad")))
         buttons = numpad.find_elements(By.CSS_SELECTOR,"button")
         
@@ -46,16 +50,18 @@ def open_page(driver, username, password, date_from, date_to, path):
                     button.click()
                     time.sleep(0.5)
                     break
+        '''
+
         time.sleep(2)
         button_join.click()
         time.sleep(10)
-        export(driver, date_from, date_to, path)
+        export(driver, date_from, date_to,path)
     except Exception as e:
         print('Error:', e)
     finally:
         driver.quit()
 
-def export(driver, date_from, date_to, path):
+def export(driver, date_from, date_to,path):
     try:
         a_gestion = WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.ID,"gestion")))
         a_gestion.click()
@@ -76,6 +82,8 @@ def export(driver, date_from, date_to, path):
         driver.execute_script(f"arguments[0].value = '{date_from}';", input_date_from)
         driver.execute_script(script)
 
+        time.sleep(1)
+
         input_date_to = WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.ID,"hasta")))
         input_date_to.clear()
         driver.execute_script(f"arguments[0].value = '{date_to}';", input_date_to)
@@ -88,19 +96,28 @@ def export(driver, date_from, date_to, path):
 
         button_search = WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.ID,"buscar")))
         button_search.click()
+
         time.sleep(2)
+
         button_export = WebDriverWait(driver,10).until(EC.element_to_be_clickable((By.ID,"exportar")))
         button_export.click()
-        time.sleep(20)
+        time.sleep(60)
         order_columns(path)
     except Exception as e:
         print('Error:', e)
     finally:
         driver.quit()
 
+def execute_script(path, username, password, date_from, date_to):
+    driver = start_driver(path)
+    if driver:
+        delete_cache(driver)
+        open_page(driver, username, password, date_from, date_to, path)
+
 def order_columns(path):
     try:
-        file_paths = glob.glob(path + "/*.csv")
+        definitive_path = os.path.join(path, "*.csv")
+        file_paths = glob.glob(definitive_path)
         list_columns = ["CALC_SISTEMA", "FLAG_RECLAMO_PRINCIPAL", "NUMERO_RECLAMO", "CASO_NUMERO",
                         "CALC_FECHA_RECLAMO", "CALC_FECHA_HORA_RECLAMO", "MONTO_RECLAMADO_CARGO",
                         "MONTO_RECLAMADO", "MOTIVO1", "MOTIVO3", "MEDIO_UTILIZADO_INFO",
@@ -120,20 +137,16 @@ def order_columns(path):
             df = df[list_columns]
             dfs.append(df)
         merged_df = pd.concat(dfs)
-        merged_df.to_csv(path + "/datos_ordenados.csv", index=False)
+        output_file = os.path.join(path, "datos_ordenados.xlsx")
+        merged_df.to_excel(output_file, index=False)
     except Exception as e:
         print('Error:', e)
 
-def execute_script(path, username, password, date_from, date_to):
-    driver = start_driver(path)
-    if driver:
-        delete_cache(driver)
-        open_page(driver, username, password, date_from, date_to, path)
 
 if __name__ == '__main__':
-    path_to_download_reports = r"C:/Users/Luis Alva/Desktop/reportes"
+    path_to_download_reports = r"C:\Users\Luis Alva\Desktop\reportes"
     username = "46171647"
-    password = ['4', '6', '1', '7', '1', '6', '4', '6']
+    password = "46171646"
     date_from = "25-02-2024"
-    date_to = "27-02-2024"
+    date_to = "26-02-2024"
     execute_script(path_to_download_reports, username, password, date_from, date_to)
